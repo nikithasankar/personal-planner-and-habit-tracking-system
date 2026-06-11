@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Planner</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="celebration-layer" aria-hidden="true"></div>
+
+  <div id="reminder-banner" class="reminder-banner hidden" role="alert">
+    <span id="reminder-text"></span>
+    <button type="button" id="reminder-dismiss" class="btn-icon" aria-label="Dismiss">✕</button>
+  </div>
+
+  <header class="app-header">
+    <h1 class="app-title">Personal Planner</h1>
+    <nav class="tab-nav" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="habits" role="tab" aria-selected="true">Habits</button>
+      <button type="button" class="tab-btn" data-tab="calendar" role="tab" aria-selected="false">Calendar</button>
+      <button type="button" class="tab-btn" data-tab="notes" role="tab" aria-selected="false">Notes</button>
+    </nav>
+  </header>
+
+  <main class="app-main">
+    <!-- HABITS SECTION -->
+    <section id="section-habits" class="tab-section active" role="tabpanel">
+      <div class="section-toolbar">
+        <div class="date-strip" id="habits-date-strip"></div>
+        <button type="button" class="btn btn-primary" id="add-habit-btn">+ Add Habit</button>
+      </div>
+
+      <div class="habits-stats-row">
+        <div class="stat-card">
+          <canvas id="habits-pie-chart" width="120" height="120" aria-label="Today's habit completion chart"></canvas>
+          <div class="stat-label">
+            <span id="completion-percent">0%</span>
+            <small>Today</small>
+          </div>
+        </div>
+        <div class="stat-card stat-text">
+          <span class="stat-value" id="best-streak-stat">0</span>
+          <small>Best Streak</small>
+        </div>
+        <div class="stat-card stat-text">
+          <span class="stat-value" id="total-done-stat">0</span>
+          <small>Total Done</small>
+        </div>
+      </div>
+
+      <div id="habits-list" class="habits-list"></div>
+
+      <div class="weekly-section">
+        <h2 class="section-subtitle">Weekly Progress</h2>
+        <div id="weekly-grid" class="weekly-grid"></div>
+      </div>
+    </section>
+
+    <!-- CALENDAR SECTION -->
+    <section id="section-calendar" class="tab-section" role="tabpanel" hidden>
+      <div class="calendar-header">
+        <button type="button" class="btn-icon" id="cal-prev-month" aria-label="Previous month">‹</button>
+        <h2 id="cal-month-label"></h2>
+        <button type="button" class="btn-icon" id="cal-next-month" aria-label="Next month">›</button>
+        <button type="button" class="btn btn-secondary" id="cal-today-btn">Today</button>
+      </div>
+      <div class="calendar-weekdays">
+        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span>
+        <span>Fri</span><span>Sat</span><span>Sun</span>
+      </div>
+      <div id="calendar-grid" class="calendar-grid"></div>
+    </section>
+
+    <!-- NOTES SECTION -->
+    <section id="section-notes" class="tab-section" role="tabpanel" hidden>
+      <div class="notes-nav">
+        <button type="button" class="btn-icon" id="notes-prev-day" aria-label="Previous day">‹</button>
+        <div class="notes-date-display">
+          <input type="date" id="notes-date-picker" class="date-input">
+          <span id="notes-date-label"></span>
+        </div>
+        <button type="button" class="btn-icon" id="notes-next-day" aria-label="Next day">›</button>
+      </div>
+      <p id="notes-empty-hint" class="empty-hint">No note for this day — start writing...</p>
+      <textarea id="notes-textarea" class="notes-textarea" placeholder="Write your note for this day..."></textarea>
+      <div class="notes-actions">
+        <button type="button" class="btn btn-primary" id="notes-save-btn">Save Note</button>
+        <button type="button" class="btn btn-danger" id="notes-delete-btn">Delete Note</button>
+      </div>
+      <p id="notes-status" class="notes-status"></p>
+    </section>
+  </main>
+
+  <!-- HABIT MODAL -->
+  <dialog id="habit-modal" class="modal">
+    <form id="habit-form" class="modal-form">
+      <h2 id="habit-modal-title">Add Habit</h2>
+      <input type="hidden" id="habit-id">
+      <label>
+        Name
+        <input type="text" id="habit-name" required maxlength="60" placeholder="e.g. Drink water">
+      </label>
+      <label>
+        Icon (emoji)
+        <input type="text" id="habit-icon" maxlength="4" placeholder="💧" value="✨">
+      </label>
+      <label>
+        Color
+        <select id="habit-color">
+          <option value="#B8E0F6">Sky Blue</option>
+          <option value="#FFD4B8">Peach</option>
+          <option value="#D4C4F0">Lavender</option>
+          <option value="#B8F0D4">Mint</option>
+          <option value="#F0E6B8">Yellow</option>
+          <option value="#F0B8D4">Pink</option>
+        </select>
+      </label>
+      <label>
+        Type
+        <select id="habit-type">
+          <option value="checkbox">Yes / No (checkbox)</option>
+          <option value="numeric">Numeric goal</option>
+        </select>
+      </label>
+      <div id="numeric-fields" class="field-group hidden">
+        <label>
+          Daily goal
+          <input type="number" id="habit-goal" min="1" value="1">
+        </label>
+        <label>
+          Unit
+          <input type="text" id="habit-unit" maxlength="20" placeholder="oz, pages, min...">
+        </label>
+      </div>
+      <label>
+        Reminder time (optional)
+        <input type="time" id="habit-reminder">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="habit-cancel-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- CALENDAR DAY PANEL -->
+  <dialog id="day-panel" class="modal modal-wide">
+    <div class="day-panel-header">
+      <h2 id="day-panel-title">Events</h2>
+      <button type="button" class="btn btn-primary" id="day-add-event-btn">+ Add Event</button>
+    </div>
+    <ul id="day-events-list" class="day-events-list"></ul>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" id="day-panel-close">Close</button>
+    </div>
+  </dialog>
+
+  <!-- EVENT MODAL -->
+  <dialog id="event-modal" class="modal">
+    <form id="event-form" class="modal-form">
+      <h2 id="event-modal-title">Add Event</h2>
+      <input type="hidden" id="event-id">
+      <label>
+        Title
+        <input type="text" id="event-title" required maxlength="100" placeholder="Meeting, workout...">
+      </label>
+      <label>
+        Date
+        <input type="date" id="event-date" required>
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="event-all-day">
+        All day
+      </label>
+      <div id="event-time-fields" class="field-row">
+        <label>
+          Start
+          <input type="time" id="event-start" value="09:00">
+        </label>
+        <label>
+          End
+          <input type="time" id="event-end" value="10:00">
+        </label>
+      </div>
+      <label>
+        Color
+        <select id="event-color">
+          <option value="#4285F4">Blue</option>
+          <option value="#0F9D58">Green</option>
+          <option value="#F4B400">Yellow</option>
+          <option value="#DB4437">Red</option>
+          <option value="#AB47BC">Purple</option>
+          <option value="#FF6D00">Orange</option>
+        </select>
+      </label>
+      <label>
+        Description
+        <textarea id="event-description" rows="3" placeholder="Optional details..."></textarea>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-danger" id="event-delete-btn" hidden>Delete</button>
+        <button type="button" class="btn btn-secondary" id="event-cancel-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/storage.js"></script>
+  <script src="js/celebration.js"></script>
+  <script src="js/habits.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
